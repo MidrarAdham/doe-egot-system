@@ -1,58 +1,58 @@
+#
+# https://cliutils.gitlab.io/modern-cmake/
+#
+# Almost all CMake files should start with this
 # You should always specify a range with the newest
-# and oldest tested versions of CMake. 
-cmake_minimum_required(VERSION 3.14)
+# and oldest tested versions of CMake. This will ensure
+# you pick up the best policies.
+cmake_minimum_required(VERSION 3.11...3.19)
 
-# set version
-set(PROJECT_VERSION 2.0.0)
-set(PROJECT_NAME EGOT_ESI)
+# MACRO to allow 3.14+ syntax
+if(${CMAKE_VERSION} VERSION_LESS 3.14)
+    macro(FetchContent_MakeAvailable NAME)
+        FetchContent_GetProperties(${NAME})
+        if(NOT ${NAME}_POPULATED)
+            FetchContent_Populate(${NAME})
+            add_subdirectory(${${NAME}_SOURCE_DIR} ${${NAME}_BINARY_DIR})
+        endif()
+    endmacro()
+endif()
 
 # This is your project statement. You should always list languages;
+# Listing the version is nice here since it sets lots of useful variables
 project(
-    ${PROJECT_NAME}
-    VERSION ${PROJECT_VERSION}
-)
+  ModernCMakeExample
+  VERSION 1.0
+  LANGUAGES CXX)
+include(FetchContent)
 
-# specify the C++ standard
+# If you set any CMAKE_ variables, that can go here.
+# (But usually don't do this, except maybe for C++ standard)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+enable_testing() # Must be in main file
 
-# fetch remote packages for development
-find_package(Boost REQUIRED filesystem)
-
-include(FetchContent)
+# Find packages go here.
+find_package(Boost REQUIRED regex filesystem)
 FetchContent_Declare(
   googletest
   GIT_REPOSITORY https://github.com/google/googletest.git
-  GIT_TAG        release-1.11.0
+  GIT_TAG        master
 )
 
-FetchContent_Declare(
-  flecs
-  GIT_REPOSITORY https://github.com/SanderMertens/flecs.git
-  GIT_TAG        v2.4.8
-)
+# CMake 3.14+
+FetchContent_MakeAvailable(googletest)
 
-FetchContent_MakeAvailable(googletest flecs)
+# You should usually split this into folders, but this is a simple example
 
-add_subdirectory(utilities)
-add_subdirectory(standards)
-add_subdirectory(ecs)
-add_subdirectory(interfaces)
-add_subdirectory(dtm)
-#add_subdirectory(gsp)
-add_subdirectory(dcm)
+# This is a "default" library, and will match the *** variable setting.
+# Other common choices are STATIC, SHARED, and MODULE
+# Including header files here helps IDEs but is not required.
+# Output libname matches target name, with the usual extensions on your system
+# add_library(MyLibExample simple_lib.cpp simple_lib.hpp)
 
+# Link each target with other targets or add options, etc.
 
-# install resources for programs
-execute_process(
-    COMMAND ${CMAKE_COMMAND} -E copy_directory 
-    ${CMAKE_CURRENT_SOURCE_DIR}/resources/
-    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/
-)
-
-execute_process(
-    COMMAND ${CMAKE_COMMAND} -E copy_directory 
-    ${CMAKE_CURRENT_SOURCE_DIR}/ssl/root-ca/
-    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/root-ca
-)
+# The executable code is here
+add_subdirectory(src)
+add_subdirectory(tests)
