@@ -6,6 +6,7 @@ import sys, os
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import ssl
 from datetime import datetime
+import classifier 
 
 HOST_NAME = "0.0.0.0"
 PORT = 8090
